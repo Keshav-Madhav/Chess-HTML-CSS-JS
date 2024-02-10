@@ -5,6 +5,8 @@
 const board = document.getElementById('board');
 const ctx = board.getContext('2d');
 
+const flipButton = document.getElementById('flip');
+
 // Set the size of the board
 const size = Math.min(window.innerWidth, window.innerHeight);
 var cssWidth = width = size * 0.9;
@@ -47,6 +49,12 @@ let originalPosition = null;
 //////////////////////// Event Listeners ////////////////////////
 
 
+
+
+// Event listener for the flip button
+flipButton.addEventListener('click', function() {
+  flipBoard();
+})
 
 
 // Event listeners for mouse events
@@ -153,9 +161,6 @@ function handleMouseUp(event) {
     // Clear the selected piece and original position
     selectedPiece = null;
     originalPosition = null;
-
-    // Redraw the board
-    draw();
   }
 }
 
@@ -229,6 +234,22 @@ function setupPieces() {
   }
 }
 setupPieces();
+
+function flipBoard() {
+  // Flip the board
+  board.style.transform = isBoardFlipped ? 'rotate(0deg)' : 'rotate(180deg)';
+
+  // Change the pieces' orientation
+  for (var i = 0; i < pieces.length; i++) {
+    pieces[i].image.src = `Pieces/${isBoardFlipped ? 'Straight' : 'Rotated'}/${pieces[i].name}_${pieces[i].color}.svg`;
+  }
+
+  // Flip the flag
+  isBoardFlipped = !isBoardFlipped;
+
+  // Redraw the board
+  draw();
+}
 
 
 // Function to draw the board
