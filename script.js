@@ -49,3 +49,36 @@ function createBoardGrid() {
   return grid;
 }
 let grid = createBoardGrid();
+
+function drawBoard() { 
+  for (var i = 0; i < 8; i++) {
+    for (var j = 0; j < 8; j++) {
+      // Set the fill color based on the square color
+      ctx.fillStyle = grid[i][j].color;
+
+      // Draw the square
+      ctx.fillRect(j * squareSize, i * squareSize, squareSize, squareSize);
+
+      // Set the font and color for the text
+      ctx.font = '55px Arial';
+      ctx.fillStyle = grid[i][j].color === white[theme] ? black[theme] : white[theme];
+
+      // Draw the file and rank labels
+      if (j === 0) { // If it's the first file, draw the rank
+        ctx.fillText(grid[i][j].rank, j * squareSize + 5, i * squareSize + 55);
+      }
+      if (i === 7) { // If it's the first rank, draw the file
+        ctx.fillText(grid[i][j].file, j * squareSize + squareSize - 40, i * squareSize + squareSize - 10);
+      }
+    }
+  }
+}
+
+// Function to draw the board
+function draw () {
+  ctx.clearRect(0, 0, width, height);
+
+  drawBoard();
+}
+
+draw();
