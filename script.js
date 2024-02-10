@@ -1,10 +1,10 @@
 //////////////////////// Variables ////////////////////////
 
 // Getting DOM elements
-const board = document.getElementById('board'); // Canvas element
-const ctx = board.getContext('2d'); // Canvas context
+const board = document.getElementById('board');
+const ctx = board.getContext('2d');
 
-const flipButton = document.getElementById('flip'); // Flip button element
+const flipButton = document.getElementById('flip');
 
 // Set the size of the board
 const size = Math.min(window.innerWidth, window.innerHeight);
@@ -24,22 +24,24 @@ board.style.width = cssWidth + 'px';
 board.style.height = cssHeight + 'px';
 
 // Calculate the size of a square
-var squareSize = pixelWidth / 8; // Size of each square on the board
+var squareSize = pixelWidth / 8;
 
 // Color definitions for chessboard squares
-const black = ['#769656', '#b88762']; // Dark square color
-const white = ['#eeeed2', '#f0d9b5']; // Light square color
-var theme = 0; // Current theme (0 for default)
+const black = ['#769656', '#b88762'];
+const white = ['#eeeed2', '#f0d9b5'];
+var theme = 1;
 
 // Create an array to hold all the pieces
-var pieces = []; // Array to store chess pieces
+var pieces = [];
 
 // Flag to keep track of whether the board is flipped
-var isBoardFlipped = false; // Flag to track if the board is flipped
+var isBoardFlipped = false;
 
-// Variables to track the currently selected piece and its original position
+
 let selectedPiece = null; // Currently selected piece
 let originalPosition = null; // Original position of the selected piece
+
+
 
 //////////////////////// Event Listeners ////////////////////////
 
@@ -136,6 +138,14 @@ function handleMouseUp(event) {
     const file = Math.floor(mouseX / squareSize);
     const rank = 7 - Math.floor(mouseY / squareSize); // Invert y-coordinate and adjust for flipped ranks
 
+    // Check if there's already a piece at the new position
+    const capturedPieceIndex = pieces.findIndex(piece => piece.file === file && piece.rank === rank);
+
+    // If there's a piece at the new position and it's not the selected piece, remove it
+    if (capturedPieceIndex !== -1 && pieces[capturedPieceIndex] !== selectedPiece) {
+      pieces.splice(capturedPieceIndex, 1);
+    }
+
     // Update the position of the selected piece
     selectedPiece.file = file;
     selectedPiece.rank = rank;
@@ -146,6 +156,35 @@ function handleMouseUp(event) {
 
     // Redraw the board
     draw();
+  }
+}
+
+
+function movePiece(algebraicCurrent, algebraicNew) {
+  // Convert algebraic notation to file and rank coordinates
+  const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+  const fileCurrent = files.indexOf(algebraicCurrent[0]);
+  const rankCurrent = parseInt(algebraicCurrent[1]) - 1;
+  const fileNew = files.indexOf(algebraicNew[0]);
+  const rankNew = parseInt(algebraicNew[1]) - 1;
+
+  // Find the piece at the current position
+  const piece = pieces.find(piece => piece.file === fileCurrent && piece.rank === rankCurrent);
+
+  // Find if there's already a piece at the new position
+  const capturedPieceIndex = pieces.findIndex(piece => piece.file === fileNew && piece.rank === rankNew);
+
+  // If piece found, move it to the new position
+  if (piece) {
+    piece.file = fileNew;
+    piece.rank = rankNew;
+    if (capturedPieceIndex !== -1) {
+      // Remove the captured piece from the array
+      pieces.splice(capturedPieceIndex, 1);
+    }
+    draw(); // Redraw the board
+  } else {
+    console.log('Piece not found at current position.');
   }
 }
 
