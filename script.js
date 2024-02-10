@@ -55,6 +55,12 @@ board.addEventListener('mousedown', handleMouseDown);
 board.addEventListener('mousemove', handleMouseMove);
 board.addEventListener('mouseup', handleMouseUp);
 
+// Event listeners for touch events
+board.addEventListener('touchstart', handleTouchStart);
+board.addEventListener('touchmove', handleTouchMove);
+board.addEventListener('touchend', handleTouchEnd);
+
+
 //////////////////////// Classes ////////////////////////
 
 // Class to represent a chess piece
@@ -75,6 +81,28 @@ class Piece {
 }
 
 //////////////////////// Functions ////////////////////////
+
+// Function to handle touch start event
+function handleTouchStart(event) {
+  event.preventDefault(); // Prevent default touch behavior
+  const touch = event.touches[0]; // Get the first touch
+  handleMouseDown(touch); // Simulate mouse down event with touch coordinates
+}
+
+// Function to handle touch move event
+function handleTouchMove(event) {
+  event.preventDefault(); // Prevent default touch behavior
+  const touch = event.touches[0]; // Get the first touch
+  handleMouseMove(touch); // Simulate mouse move event with touch coordinates
+}
+
+// Function to handle touch end event
+function handleTouchEnd(event) {
+  event.preventDefault(); // Prevent default touch behavior
+  const touch = event.changedTouches[0]; // Get the first touch that ended
+  handleMouseUp(touch); // Simulate mouse up event with touch coordinates
+}
+
 
 // Function to calculate scaled mouse coordinates relative to the canvas
 function getMousePos(canvas, event) {
