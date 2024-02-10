@@ -30,6 +30,27 @@ const black = ['#769656', '#b88762']
 const white = ['#eeeed2', '#f0d9b5']
 var theme = 0;
 
+
+// Create an array to hold all the pieces
+var pieces = [];
+
+class Piece {
+  constructor(name, color, file, rank) {
+    this.name = name;
+    this.color = color;
+    this.file = file;
+    this.rank = rank;
+    this.image = new Image();
+    this.image.src = `Pieces/Straight/${name}_${color}.svg`;
+  }
+
+  draw(ctx, squareSize) {
+    ctx.drawImage(this.image, this.file * squareSize, (8 - this.rank - 1) * squareSize, squareSize, squareSize);
+  }
+}
+
+
+
 // Function to create the board grid
 function createBoardGrid() {
   var grid = [];
@@ -74,11 +95,45 @@ function drawBoard() {
   }
 }
 
+// Function to set up the pieces in the initial chess position
+function setupPieces() {
+  var files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+  var ranks = [1, 2, 7, 8];
+  var pieceNames = ['rook', 'knight', 'bishop', 'king', 'queen', 'bishop', 'knight', 'rook'];
+
+  for (var i = 0; i < ranks.length; i++) {
+    for (var j = 0; j < files.length; j++) {
+      var color = ranks[i] <= 2 ? 'white' : 'black';
+      var name = ranks[i] === 2 || ranks[i] === 7 ? 'pawn' : pieceNames[j];
+
+      // Create a new Piece object and add it to the pieces array
+      var piece = new Piece(name, color, j, 8 - ranks[i]);
+      pieces.push(piece);
+
+      // Load the image and start the game loop once all images are loaded
+      piece.image.onload = function() {
+        if (pieces.every(piece => piece.image.complete)) {
+          draw();
+        }
+      };
+    }
+  }
+}
+setupPieces();
+
+
 // Function to draw the board
 function draw () {
   ctx.clearRect(0, 0, width, height);
 
   drawBoard();
+
+  // Draw the pieces
+  for (var i = 0; i < pieces.length; i++) {
+    pieces[i].draw(ctx, squareSize);
+  }
+
+  console.log('drawn');
 }
 
 draw();
