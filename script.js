@@ -31,6 +31,9 @@ const black = ['#769656', '#b88762'];
 const white = ['#eeeed2', '#f0d9b5'];
 var theme = 1;
 
+// Color for legal move highlights
+const legalMoveColor = 'rgba(0, 0, 0, 0.3)';
+
 // Create an array to hold all the pieces
 var pieces = [];
 
@@ -137,6 +140,7 @@ function handleMouseDown(event) {
   }
 }
 
+// Function to handle mouse move event
 function handleMouseMove(event) {
   if (selectedPiece) {
     const mousePos = getMousePos(board, event);
@@ -155,6 +159,9 @@ function handleMouseMove(event) {
       ctx.globalAlpha = 0.5; // Make the piece semi-transparent
       ctx.drawImage(selectedPiece.image, file * squareSize, (7 - rank) * squareSize, squareSize, squareSize); // Adjust for flipped ranks
       ctx.globalAlpha = 1; // Restore global alpha to default
+    } else {
+      // If the move is not legal, redraw the board without updating the selected piece's position
+      draw();
     }
   }
 }
@@ -184,6 +191,10 @@ function handleMouseUp(event) {
 
       // Check for pawn promotion
       promotion(selectedPiece);
+    } else {
+      // If the move is not legal, revert the selected piece to its original position
+      selectedPiece.file = originalPosition.file;
+      selectedPiece.rank = originalPosition.rank;
     }
 
     // Clear the selected piece and original position
@@ -194,6 +205,7 @@ function handleMouseUp(event) {
     draw();
   }
 }
+
 
 
 // Function to handle pawn promotion
@@ -245,11 +257,14 @@ function isMoveLegal(piece, file, rank) {
   // Implement movement restrictions based on piece type
   switch (piece.name) {
     case 'pawn':
-      // Pawns can move forward one square only
+      // Pawns moving forward one square
       const forwardDirection = piece.color === 'white' ? -1 : 1;
       const isForwardOne = (file === piece.file && rank === piece.rank + forwardDirection);
 
-      return isForwardOne;
+      // Pawns moving forward two squares from the starting position
+      const isForwardTwo = (file === piece.file && rank === piece.rank + 2 * forwardDirection && ((piece.color === 'white' && piece.rank === 6) || (piece.color === 'black' && piece.rank === 1)));
+
+      return isForwardOne || isForwardTwo;
 
     case 'rook':
       // Rooks can move horizontally or vertically
@@ -370,6 +385,37 @@ function flipBoard() {
   draw();
 }
 
+// Function to draw legal moves for the selected piece
+function drawLegalMoves() {
+  if (selectedPiece) {
+    const legalMoves = []; // Array to store legal move coordinates
+
+    // Iterate over all squares on the board
+    for (let file = 0; file < 8; file++) {
+      for (let rank = 0; rank < 8; rank++) {
+        // Check if the move is legal for the selected piece
+        if (isMoveLegal(selectedPiece, file, rank)) {
+          legalMoves.push({ file, rank }); // Add legal move coordinates to the array
+        }
+      }
+    }
+
+    // Draw circles in the center of legal move squares
+    legalMoves.forEach(move => {
+      const centerX = (move.file + 0.5) * squareSize; // Calculate center x-coordinate of the square
+      const centerY = (7 - move.rank + 0.5) * squareSize; // Calculate center y-coordinate of the square (adjust for flipped ranks)
+      const radius = squareSize / 4; // Radius of the circle
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI); // Draw a circle
+      ctx.fillStyle = legalMoveColor; // Green color with 50% transparency
+      ctx.fill();
+    });
+  }
+}
+
+
+
 // Function to draw the entire board
 function draw() {
   ctx.clearRect(0, 0, width, height); // Clear the canvas
@@ -381,7 +427,10 @@ function draw() {
     pieces[i].draw(ctx, squareSize);
   }
 
+  drawLegalMoves(); // Draw legal moves
+
   console.log('drawn');
 }
+
 
 draw(); // Draw the initial board
