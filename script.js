@@ -150,6 +150,9 @@ function handleMouseUp(event) {
     selectedPiece.file = file;
     selectedPiece.rank = rank;
 
+    // Check for pawn promotion
+    promotion(selectedPiece);
+
     // Clear the selected piece and original position
     selectedPiece = null;
     originalPosition = null;
@@ -159,7 +162,18 @@ function handleMouseUp(event) {
   }
 }
 
+// Function to handle pawn promotion
+function promotion(piece) {
+  // Check if the piece is a pawn and has reached the promotion rank
+  if (piece.name === 'pawn' && (piece.rank === 0 || piece.rank === 7)) {
+    // Replace the pawn with a queen
+    piece.name = 'queen';
+    piece.image.src = `Pieces/Straight/queen_${piece.color}.svg`;
+  }
+}
 
+
+// Function to move a piece from one position to another
 function movePiece(algebraicCurrent, algebraicNew) {
   // Convert algebraic notation to file and rank coordinates
   const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -182,6 +196,10 @@ function movePiece(algebraicCurrent, algebraicNew) {
       // Remove the captured piece from the array
       pieces.splice(capturedPieceIndex, 1);
     }
+
+    // Check for pawn promotion
+    promotion(piece);
+
     draw(); // Redraw the board
   } else {
     console.log('Piece not found at current position.');
