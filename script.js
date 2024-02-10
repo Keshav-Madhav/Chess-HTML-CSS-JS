@@ -137,7 +137,6 @@ function handleMouseDown(event) {
   }
 }
 
-// Function to handle mouse move event
 function handleMouseMove(event) {
   if (selectedPiece) {
     const mousePos = getMousePos(board, event);
@@ -146,14 +145,17 @@ function handleMouseMove(event) {
     const file = Math.floor(mouseX / squareSize);
     const rank = 7 - Math.floor(mouseY / squareSize); // Invert y-coordinate and adjust for flipped ranks
 
-    // Redraw the board
-    draw();
+    // Check if the move is legal based on piece type
+    if (isMoveLegal(selectedPiece, file, rank)) {
+      // Redraw the board
+      draw();
 
-    // Draw the selected piece at its new position
-    selectedPiece.draw(ctx, squareSize);
-    ctx.globalAlpha = 0.5; // Make the piece semi-transparent
-    ctx.drawImage(selectedPiece.image, file * squareSize, (7 - rank) * squareSize, squareSize, squareSize); // Adjust for flipped ranks
-    ctx.globalAlpha = 1; // Restore global alpha to default
+      // Draw the selected piece at its new position
+      selectedPiece.draw(ctx, squareSize);
+      ctx.globalAlpha = 0.5; // Make the piece semi-transparent
+      ctx.drawImage(selectedPiece.image, file * squareSize, (7 - rank) * squareSize, squareSize, squareSize); // Adjust for flipped ranks
+      ctx.globalAlpha = 1; // Restore global alpha to default
+    }
   }
 }
 
@@ -166,20 +168,23 @@ function handleMouseUp(event) {
     const file = Math.floor(mouseX / squareSize);
     const rank = 7 - Math.floor(mouseY / squareSize); // Invert y-coordinate and adjust for flipped ranks
 
-    // Check if there's already a piece at the new position
-    const capturedPieceIndex = pieces.findIndex(piece => piece.file === file && piece.rank === rank);
+    // Check if the move is legal based on piece type
+    if (isMoveLegal(selectedPiece, file, rank)) {
+      // Check if there's already a piece at the new position
+      const capturedPieceIndex = pieces.findIndex(piece => piece.file === file && piece.rank === rank);
 
-    // If there's a piece at the new position and it's not the selected piece, remove it
-    if (capturedPieceIndex !== -1 && pieces[capturedPieceIndex] !== selectedPiece) {
-      pieces.splice(capturedPieceIndex, 1);
+      // If there's a piece at the new position and it's not the selected piece, remove it
+      if (capturedPieceIndex !== -1 && pieces[capturedPieceIndex] !== selectedPiece) {
+        pieces.splice(capturedPieceIndex, 1);
+      }
+
+      // Update the position of the selected piece
+      selectedPiece.file = file;
+      selectedPiece.rank = rank;
+
+      // Check for pawn promotion
+      promotion(selectedPiece);
     }
-
-    // Update the position of the selected piece
-    selectedPiece.file = file;
-    selectedPiece.rank = rank;
-
-    // Check for pawn promotion
-    promotion(selectedPiece);
 
     // Clear the selected piece and original position
     selectedPiece = null;
@@ -189,6 +194,7 @@ function handleMouseUp(event) {
     draw();
   }
 }
+
 
 // Function to handle pawn promotion
 function promotion(piece) {
@@ -233,6 +239,47 @@ function movePiece(algebraicCurrent, algebraicNew) {
     console.log('Piece not found at current position.');
   }
 }
+
+// Function to check if a move is legal for a specific piece
+function isMoveLegal(piece, file, rank) {
+  // Implement movement restrictions based on piece type
+  switch (piece.name) {
+    case 'pawn':
+      // Pawns can move forward one square only
+      const forwardDirection = piece.color === 'white' ? -1 : 1;
+      const isForwardOne = (file === piece.file && rank === piece.rank + forwardDirection);
+
+      return isForwardOne;
+
+    case 'rook':
+      // Rooks can move horizontally or vertically
+      return (file === piece.file || rank === piece.rank);
+
+    case 'bishop':
+      // Bishops can move diagonally
+      return (Math.abs(file - piece.file) === Math.abs(rank - piece.rank));
+
+    case 'knight':
+      // Knights move in an L-shape pattern: two squares in one direction and one square perpendicular to that direction
+      const deltaX = Math.abs(file - piece.file);
+      const deltaY = Math.abs(rank - piece.rank);
+      return (deltaX === 1 && deltaY === 2) || (deltaX === 2 && deltaY === 1);
+
+    case 'queen':
+      // Queens can move horizontally, vertically, or diagonally
+      return (file === piece.file || rank === piece.rank || Math.abs(file - piece.file) === Math.abs(rank - piece.rank));
+
+    case 'king':
+      // Kings can move one square in any direction
+      const deltaXKing = Math.abs(file - piece.file);
+      const deltaYKing = Math.abs(rank - piece.rank);
+      return (deltaXKing <= 1 && deltaYKing <= 1);
+
+    default:
+      return true; // Allow movement for unknown pieces
+  }
+}
+
 
 
 // Function to create the board grid
