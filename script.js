@@ -1,20 +1,19 @@
 //////////////////////// Variables ////////////////////////
 
+// Getting DOM elements
+const board = document.getElementById('board'); // Canvas element
+const ctx = board.getContext('2d'); // Canvas context
 
-// Getting Dom elements
-const board = document.getElementById('board');
-const ctx = board.getContext('2d');
-
-const flipButton = document.getElementById('flip');
+const flipButton = document.getElementById('flip'); // Flip button element
 
 // Set the size of the board
 const size = Math.min(window.innerWidth, window.innerHeight);
-var cssWidth = width = size * 0.9;
-var cssHeight = height = size * 0.9;
+var cssWidth = width = size * 0.9; // CSS width of the board
+var cssHeight = height = size * 0.9; // CSS height of the board
 
 // Set the canvas size in pixels
-var pixelWidth = 2000;
-var pixelHeight = 2000;
+var pixelWidth = 2000; // Canvas pixel width
+var pixelHeight = 2000; // Canvas pixel height
 
 // Set the width and height of the canvas in pixels
 board.width = pixelWidth;
@@ -25,69 +24,57 @@ board.style.width = cssWidth + 'px';
 board.style.height = cssHeight + 'px';
 
 // Calculate the size of a square
-var squareSize = pixelWidth / 8;
+var squareSize = pixelWidth / 8; // Size of each square on the board
 
-// Color definitions
-const black = ['#769656', '#b88762']
-const white = ['#eeeed2', '#f0d9b5']
-var theme = 0;
+// Color definitions for chessboard squares
+const black = ['#769656', '#b88762']; // Dark square color
+const white = ['#eeeed2', '#f0d9b5']; // Light square color
+var theme = 0; // Current theme (0 for default)
 
 // Create an array to hold all the pieces
-var pieces = [];
+var pieces = []; // Array to store chess pieces
 
 // Flag to keep track of whether the board is flipped
-var isBoardFlipped = false;
+var isBoardFlipped = false; // Flag to track if the board is flipped
 
 // Variables to track the currently selected piece and its original position
-let selectedPiece = null;
-let originalPosition = null;
-
-
-
-
+let selectedPiece = null; // Currently selected piece
+let originalPosition = null; // Original position of the selected piece
 
 //////////////////////// Event Listeners ////////////////////////
-
-
-
 
 // Event listener for the flip button
 flipButton.addEventListener('click', function() {
   flipBoard();
-})
-
+});
 
 // Event listeners for mouse events
 board.addEventListener('mousedown', handleMouseDown);
 board.addEventListener('mousemove', handleMouseMove);
 board.addEventListener('mouseup', handleMouseUp);
 
-
-
 //////////////////////// Classes ////////////////////////
 
+// Class to represent a chess piece
 class Piece {
   constructor(name, color, file, rank) {
-    this.name = name;
-    this.color = color;
-    this.file = file;
-    this.rank = rank;
-    this.image = new Image();
-    this.image.src = `Pieces/Straight/${name}_${color}.svg`;
+    this.name = name; // Piece name (e.g., 'pawn', 'rook', etc.)
+    this.color = color; // Piece color ('white' or 'black')
+    this.file = file; // File position (0-7)
+    this.rank = rank; // Rank position (0-7)
+    this.image = new Image(); // Image object for the piece
+    this.image.src = `Pieces/Straight/${name}_${color}.svg`; // Image source path
   }
 
+  // Method to draw the piece on the canvas
   draw(ctx, squareSize) {
     ctx.drawImage(this.image, this.file * squareSize, (8 - this.rank - 1) * squareSize, squareSize, squareSize);
   }
 }
 
-
-
 //////////////////////// Functions ////////////////////////
 
-
-
-// Function to calculate scaled mouse coordinates
+// Function to calculate scaled mouse coordinates relative to the canvas
 function getMousePos(canvas, event) {
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
@@ -144,15 +131,10 @@ function handleMouseMove(event) {
 function handleMouseUp(event) {
   if (selectedPiece) {
     const mousePos = getMousePos(board, event);
-    let mouseX = mousePos.x;
+    const mouseX = mousePos.x;
     const mouseY = mousePos.y;
-    let file = Math.floor(mouseX / squareSize);
-    let rank = 7 - Math.floor(mouseY / squareSize); // Invert y-coordinate and adjust for flipped ranks
-
-    if (isBoardFlipped) {
-      mouseX = board.width - mouseX; // Adjust mouseX for flipped board
-      file = 7 - file; // Adjust file for flipped board
-    }
+    const file = Math.floor(mouseX / squareSize);
+    const rank = 7 - Math.floor(mouseY / squareSize); // Invert y-coordinate and adjust for flipped ranks
 
     // Update the position of the selected piece
     selectedPiece.file = file;
@@ -161,6 +143,9 @@ function handleMouseUp(event) {
     // Clear the selected piece and original position
     selectedPiece = null;
     originalPosition = null;
+
+    // Redraw the board
+    draw();
   }
 }
 
@@ -174,7 +159,7 @@ function createBoardGrid() {
     var row = [];
     for (var j = 0; j < 8; j++) {
       row.push({
-        color: (i + j) % 2 === 0 ? white[theme] : black[theme],
+        color: (i + j) % 2 === 0 ? white[theme] : black[theme], // Alternate colors for squares
         file: files[j],
         rank: 8 - i
       });
@@ -183,8 +168,9 @@ function createBoardGrid() {
   }
   return grid;
 }
-let grid = createBoardGrid();
+let grid = createBoardGrid(); // Create the initial board grid
 
+// Function to draw the chessboard
 function drawBoard() { 
   for (var i = 0; i < 8; i++) {
     for (var j = 0; j < 8; j++) {
@@ -217,8 +203,8 @@ function setupPieces() {
 
   for (var i = 0; i < ranks.length; i++) {
     for (var j = 0; j < files.length; j++) {
-      var color = ranks[i] <= 2 ? 'white' : 'black';
-      var name = ranks[i] === 2 || ranks[i] === 7 ? 'pawn' : pieceNames[j];
+      var color = ranks[i] <= 2 ? 'white' : 'black'; // Determine piece color based on rank
+      var name = ranks[i] === 2 || ranks[i] === 7 ? 'pawn' : pieceNames[j]; // Determine piece name
 
       // Create a new Piece object and add it to the pieces array
       var piece = new Piece(name, color, j, 8 - ranks[i]);
@@ -233,8 +219,9 @@ function setupPieces() {
     }
   }
 }
-setupPieces();
+setupPieces(); // Set up the initial chess position
 
+// Function to flip the chessboard
 function flipBoard() {
   // Flip the board
   board.style.transform = isBoardFlipped ? 'rotate(0deg)' : 'rotate(180deg)';
@@ -251,12 +238,11 @@ function flipBoard() {
   draw();
 }
 
+// Function to draw the entire board
+function draw() {
+  ctx.clearRect(0, 0, width, height); // Clear the canvas
 
-// Function to draw the board
-function draw () {
-  ctx.clearRect(0, 0, width, height);
-
-  drawBoard();
+  drawBoard(); // Draw the chessboard
 
   // Draw the pieces
   for (var i = 0; i < pieces.length; i++) {
@@ -266,4 +252,4 @@ function draw () {
   console.log('drawn');
 }
 
-draw();
+draw(); // Draw the initial board
