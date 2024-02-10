@@ -30,9 +30,33 @@ const black = ['#769656', '#b88762']
 const white = ['#eeeed2', '#f0d9b5']
 var theme = 0;
 
-
 // Create an array to hold all the pieces
 var pieces = [];
+
+// Flag to keep track of whether the board is flipped
+var isBoardFlipped = false;
+
+// Variables to track the currently selected piece and its original position
+let selectedPiece = null;
+let originalPosition = null;
+
+
+
+
+
+//////////////////////// Event Listeners ////////////////////////
+
+
+
+
+// Event listeners for mouse events
+board.addEventListener('mousedown', handleMouseDown);
+board.addEventListener('mousemove', handleMouseMove);
+board.addEventListener('mouseup', handleMouseUp);
+
+
+
+//////////////////////// Classes ////////////////////////
 
 class Piece {
   constructor(name, color, file, rank) {
@@ -49,6 +73,91 @@ class Piece {
   }
 }
 
+
+
+//////////////////////// Functions ////////////////////////
+
+
+
+// Function to calculate scaled mouse coordinates
+function getMousePos(canvas, event) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return {
+    x: (event.clientX - rect.left) * scaleX,
+    y: (event.clientY - rect.top) * scaleY
+  };
+}
+
+// Function to handle mouse down event
+function handleMouseDown(event) {
+  const mousePos = getMousePos(board, event);
+  const mouseX = mousePos.x;
+  const mouseY = mousePos.y;
+
+  // Iterate over pieces to check if the mouse is over any piece
+  for (let i = 0; i < pieces.length; i++) {
+    const piece = pieces[i];
+    const pieceX = piece.file * squareSize;
+    const pieceY = (8 - piece.rank - 1) * squareSize; // Adjust for flipped ranks
+
+    // Check if the mouse is over this piece
+    if (mouseX >= pieceX && mouseX < pieceX + squareSize &&
+        mouseY >= pieceY && mouseY < pieceY + squareSize) {
+      selectedPiece = piece;
+      originalPosition = { file: piece.file, rank: piece.rank };
+      break; // Exit loop after finding the selected piece
+    }
+  }
+}
+
+// Function to handle mouse move event
+function handleMouseMove(event) {
+  if (selectedPiece) {
+    const mousePos = getMousePos(board, event);
+    const mouseX = mousePos.x;
+    const mouseY = mousePos.y;
+    const file = Math.floor(mouseX / squareSize);
+    const rank = 7 - Math.floor(mouseY / squareSize); // Invert y-coordinate and adjust for flipped ranks
+
+    // Redraw the board
+    draw();
+
+    // Draw the selected piece at its new position
+    selectedPiece.draw(ctx, squareSize);
+    ctx.globalAlpha = 0.5; // Make the piece semi-transparent
+    ctx.drawImage(selectedPiece.image, file * squareSize, (7 - rank) * squareSize, squareSize, squareSize); // Adjust for flipped ranks
+    ctx.globalAlpha = 1; // Restore global alpha to default
+  }
+}
+
+// Function to handle mouse up event
+function handleMouseUp(event) {
+  if (selectedPiece) {
+    const mousePos = getMousePos(board, event);
+    let mouseX = mousePos.x;
+    const mouseY = mousePos.y;
+    let file = Math.floor(mouseX / squareSize);
+    let rank = 7 - Math.floor(mouseY / squareSize); // Invert y-coordinate and adjust for flipped ranks
+
+    if (isBoardFlipped) {
+      mouseX = board.width - mouseX; // Adjust mouseX for flipped board
+      file = 7 - file; // Adjust file for flipped board
+    }
+
+    // Update the position of the selected piece
+    selectedPiece.file = file;
+    selectedPiece.rank = rank;
+
+    // Clear the selected piece and original position
+    selectedPiece = null;
+    originalPosition = null;
+
+    // Redraw the board
+    draw();
+  }
+}
 
 
 // Function to create the board grid
