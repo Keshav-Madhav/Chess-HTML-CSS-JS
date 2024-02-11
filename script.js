@@ -29,7 +29,7 @@ var squareSize = pixelWidth / 8;
 // Color definitions for chessboard squares
 const black = ['#769656', '#b88762', '#a9a18c', '#c9c9c9', '#8d8d8d','#7B3F00', '#267300', '#000F4D', '#4D004D'];
 const white = ['#eeeed2', '#f0d9b5', '#f2e2c2', '#f2f2f2', '#656565','#FFB366', '#99FF33', '#809FFF', '#FF66B2'];
-var theme = 0 ;
+var theme = 1 ;
 
 // Color for legal move highlights
 const legalMoveColor = 'rgba(0, 0, 0, 0.3)';
@@ -40,10 +40,11 @@ var pieces = [];
 // Flag to keep track of whether the board is flipped
 var isBoardFlipped = false;
 
-
 let selectedPiece = null; // Currently selected piece
 let originalPosition = null; // Original position of the selected piece
 
+// Variable to keep track of the current player
+let currentPlayer = 'white';
 
 
 //////////////////////// Event Listeners ////////////////////////
@@ -112,11 +113,21 @@ function getMousePos(canvas, event) {
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
+  let x = (event.clientX - rect.left) * scaleX;
+  let y = (event.clientY - rect.top) * scaleY;
+
+  // If the board is flipped, flip the coordinates
+  if (isBoardFlipped) {
+    x = pixelWidth - x;
+    y = pixelHeight - y;
+  }
+
   return {
-    x: (event.clientX - rect.left) * scaleX,
-    y: (event.clientY - rect.top) * scaleY
+    x: x,
+    y: y
   };
 }
+
 
 // Function to handle mouse down event
 function handleMouseDown(event) {
@@ -142,7 +153,7 @@ function handleMouseDown(event) {
 
 // Function to handle mouse move event
 function handleMouseMove(event) {
-  if (selectedPiece) {
+  if (selectedPiece && selectedPiece.color === currentPlayer) {
     const mousePos = getMousePos(board, event);
     const mouseX = mousePos.x;
     const mouseY = mousePos.y;
@@ -168,7 +179,7 @@ function handleMouseMove(event) {
 
 // Function to handle mouse up event
 function handleMouseUp(event) {
-  if (selectedPiece) {
+  if (selectedPiece && selectedPiece.color === currentPlayer) {
     const mousePos = getMousePos(board, event);
     const mouseX = mousePos.x;
     const mouseY = mousePos.y;
@@ -192,6 +203,8 @@ function handleMouseUp(event) {
 
       // Check for pawn promotion
       promotion(selectedPiece);
+
+      currentPlayer = currentPlayer === 'white' ? 'black' : 'white'; // Switch players
     } else {
       // If the move is not legal, revert the selected piece to its original position
       selectedPiece.file = originalPosition.file;
