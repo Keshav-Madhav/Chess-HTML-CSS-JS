@@ -283,11 +283,14 @@ function isMoveLegal(piece, file, rank) {
   switch (piece.name) {
     case 'pawn':
       // Pawns moving forward one square
-      const forwardDirection = piece.color === 'white' ? -1 : 1;
+      const forwardDirection = piece.color === 'white' ? 1 : -1;
       const isForwardOne = (file === piece.file && rank === piece.rank + forwardDirection);
 
+      // Check if there's a piece directly in front of the pawn
+      const isPieceInFront = pieces.some(p => p.file === piece.file && p.rank === piece.rank + forwardDirection);
+
       // Pawns moving forward two squares from the starting position
-      const isForwardTwo = (file === piece.file && rank === piece.rank + 2 * forwardDirection && ((piece.color === 'white' && piece.rank === 6) || (piece.color === 'black' && piece.rank === 1)));
+      const isForwardTwo = (file === piece.file && rank === piece.rank + 2 * forwardDirection && ((piece.color === 'white' && piece.rank === 1) || (piece.color === 'black' && piece.rank === 6)));
 
       // Pawns capturing diagonally
       const isCaptureDiagonalLeft = (file === piece.file - 1 && rank === piece.rank + forwardDirection);
@@ -297,8 +300,7 @@ function isMoveLegal(piece, file, rank) {
       const isPieceOnDiagonalLeft = pieces.some(p => p.file === piece.file - 1 && p.rank === piece.rank + forwardDirection && p.color !== piece.color);
       const isPieceOnDiagonalRight = pieces.some(p => p.file === piece.file + 1 && p.rank === piece.rank + forwardDirection && p.color !== piece.color);
 
-      return (isForwardOne || isForwardTwo) || (isCaptureDiagonalLeft && isPieceOnDiagonalLeft) || (isCaptureDiagonalRight && isPieceOnDiagonalRight);
-
+      return (!isPieceInFront && (isForwardOne || isForwardTwo)) || (isCaptureDiagonalLeft && isPieceOnDiagonalLeft) || (isCaptureDiagonalRight && isPieceOnDiagonalRight);
 
     case 'rook':
       // Rooks can move horizontally or vertically
@@ -432,16 +434,15 @@ function drawBoard() {
   }
 }
 
-// Function to set up the pieces in the initial chess position
 function setupPieces() {
   var files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-  var ranks = [1, 2, 7, 8];
-  var pieceNames = ['rook', 'knight', 'bishop', 'king', 'queen', 'bishop', 'knight', 'rook'];
+  var ranks = [8, 7, 2, 1]; // Reversed ranks
+  var pieceNames = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook']; // Adjusted for the reversed ranks
 
   for (var i = 0; i < ranks.length; i++) {
     for (var j = 0; j < files.length; j++) {
-      var color = ranks[i] <= 2 ? 'white' : 'black'; // Determine piece color based on rank
-      var name = ranks[i] === 2 || ranks[i] === 7 ? 'pawn' : pieceNames[j]; // Determine piece name
+      var color = ranks[i] >= 7 ? 'white' : 'black'; // Determine piece color based on rank
+      var name = ranks[i] === 7 || ranks[i] === 2 ? 'pawn' : pieceNames[j]; // Determine piece name
 
       // Create a new Piece object and add it to the pieces array
       var piece = new Piece(name, color, j, 8 - ranks[i]);
