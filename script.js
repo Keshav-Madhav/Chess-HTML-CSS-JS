@@ -31,9 +31,8 @@ const black = ['#769656', '#b88762', '#a9a18c', '#c9c9c9', '#8d8d8d','#7B3F00', 
 const white = ['#eeeed2', '#f0d9b5', '#f2e2c2', '#f2f2f2', '#656565','#FFB366', '#99FF33', '#809FFF', '#FF66B2'];
 var theme = 0 ;
 
+// Color for legal move highlights
 const legalMoveColor = 'rgba(0, 0, 0, 0.3)';
-const movedFromSquareColor = 'rgba(255, 150, 0, 0.3)';
-const movedToSquareColor = 'rgba(255, 255, 0, 0.2)';
 
 // Create an array to hold all the pieces
 var pieces = [];
@@ -44,9 +43,6 @@ var isBoardFlipped = false;
 
 let selectedPiece = null; // Currently selected piece
 let originalPosition = null; // Original position of the selected piece
-
-let movedFromSquare = null; // Square from which the piece was moved
-let movedToSquare = null; // Square to which the piece was moved
 
 
 
@@ -192,13 +188,10 @@ function handleMouseUp(event) {
       // Update the position of the selected piece
       selectedPiece.file = file;
       selectedPiece.rank = rank;
+      console.log("moved to",file,rank)
 
       // Check for pawn promotion
       promotion(selectedPiece);
-
-      // Update moved squares
-      movedFromSquare = { file: originalPosition.file, rank: originalPosition.rank };
-      movedToSquare = { file, rank };
     } else {
       // If the move is not legal, revert the selected piece to its original position
       selectedPiece.file = originalPosition.file;
@@ -213,6 +206,7 @@ function handleMouseUp(event) {
     draw();
   }
 }
+
 
 
 // Function to handle pawn promotion
@@ -261,6 +255,17 @@ function movePiece(algebraicCurrent, algebraicNew) {
 
 // Function to check if a move is legal for a specific piece
 function isMoveLegal(piece, file, rank) {
+
+  // Check if the target position is the same as the current position
+  if (file === piece.file && rank === piece.rank) {
+    return false;
+  }
+
+  // If the target square is occupied by a piece of the same color, the move is not legal
+  if (pieces.some(p => p.file === file && p.rank === rank && p.color === piece.color)) {
+    return false;
+  }
+  
   // Implement movement restrictions based on piece type
   switch (piece.name) {
     case 'pawn':
@@ -271,15 +276,62 @@ function isMoveLegal(piece, file, rank) {
       // Pawns moving forward two squares from the starting position
       const isForwardTwo = (file === piece.file && rank === piece.rank + 2 * forwardDirection && ((piece.color === 'white' && piece.rank === 6) || (piece.color === 'black' && piece.rank === 1)));
 
-      return isForwardOne || isForwardTwo;
+      // Pawns capturing diagonally
+      const isCaptureDiagonalLeft = (file === piece.file - 1 && rank === piece.rank + forwardDirection);
+      const isCaptureDiagonalRight = (file === piece.file + 1 && rank === piece.rank + forwardDirection);
+
+      // Check if there's a piece on the diagonal squares
+      const isPieceOnDiagonalLeft = pieces.some(p => p.file === piece.file - 1 && p.rank === piece.rank + forwardDirection && p.color !== piece.color);
+      const isPieceOnDiagonalRight = pieces.some(p => p.file === piece.file + 1 && p.rank === piece.rank + forwardDirection && p.color !== piece.color);
+
+      return (isForwardOne || isForwardTwo) || (isCaptureDiagonalLeft && isPieceOnDiagonalLeft) || (isCaptureDiagonalRight && isPieceOnDiagonalRight);
+
 
     case 'rook':
       // Rooks can move horizontally or vertically
-      return (file === piece.file || rank === piece.rank) && (file !== piece.file || rank !== piece.rank);
+      if (file === piece.file || rank === piece.rank) {
+        // Check all squares between the current position and the target position
+        const minFile = Math.min(file, piece.file);
+        const maxFile = Math.max(file, piece.file);
+        const minRank = Math.min(rank, piece.rank);
+        const maxRank = Math.max(rank, piece.rank);
+
+        for (let f = minFile + 1; f < maxFile; f++) {
+          if (pieces.some(p => p.file === f && p.rank === piece.rank)) {
+            return false;
+          }
+        }
+
+        for (let r = minRank + 1; r < maxRank; r++) {
+          if (pieces.some(p => p.file === piece.file && p.rank === r)) {
+            return false;
+          }
+        }
+
+        return true;
+      }
+      return false;
 
     case 'bishop':
       // Bishops can move diagonally
-      return (Math.abs(file - piece.file) === Math.abs(rank - piece.rank)) && (file !== piece.file || rank !== piece.rank);
+      if (Math.abs(file - piece.file) === Math.abs(rank - piece.rank)) {
+        // Check all squares between the current position and the target position
+        const fileDirection = file > piece.file ? 1 : -1;
+        const rankDirection = rank > piece.rank ? 1 : -1;
+
+        let f = piece.file + fileDirection;
+        let r = piece.rank + rankDirection;
+        while (f !== file && r !== rank) {
+          if (pieces.some(p => p.file === f && p.rank === r)) {
+            return false;
+          }
+          f += fileDirection;
+          r += rankDirection;
+        }
+
+        return true;
+      }
+      return false;
 
     case 'knight':
       // Knights move in an L-shape pattern: two squares in one direction and one square perpendicular to that direction
@@ -289,7 +341,24 @@ function isMoveLegal(piece, file, rank) {
 
     case 'queen':
       // Queens can move horizontally, vertically, or diagonally
-      return ((file === piece.file || rank === piece.rank || Math.abs(file - piece.file) === Math.abs(rank - piece.rank)) && (file !== piece.file || rank !== piece.rank));
+      if (file === piece.file || rank === piece.rank || Math.abs(file - piece.file) === Math.abs(rank - piece.rank)) {
+        // Check all squares between the current position and the target position
+        const fileDirection = file > piece.file ? 1 : -1;
+        const rankDirection = rank > piece.rank ? 1 : -1;
+
+        let f = piece.file + (file === piece.file ? 0 : fileDirection);
+        let r = piece.rank + (rank === piece.rank ? 0 : rankDirection);
+        while (f !== file || r !== rank) {
+          if (pieces.some(p => p.file === f && p.rank === r)) {
+            return false;
+          }
+          f += file === piece.file ? 0 : fileDirection;
+          r += rank === piece.rank ? 0 : rankDirection;
+        }
+
+        return true;
+      }
+      return false;
 
     case 'king':
       // Kings can move one square in any direction
@@ -393,12 +462,6 @@ function flipBoard() {
   draw();
 }
 
-function changeTheme() {
-  theme = (theme + 1) % black.length;
-  grid = createBoardGrid();
-  draw();
-}
-
 // Function to draw legal moves for the selected piece
 function drawLegalMoves() {
   if (selectedPiece) {
@@ -418,43 +481,23 @@ function drawLegalMoves() {
     legalMoves.forEach(move => {
       const centerX = (move.file + 0.5) * squareSize; // Calculate center x-coordinate of the square
       const centerY = (7 - move.rank + 0.5) * squareSize; // Calculate center y-coordinate of the square (adjust for flipped ranks)
-      const radius = squareSize / 4; // Radius of the circle
+      const radius = squareSize / 5; // Radius of the circle
 
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI); // Draw a circle
-      ctx.fillStyle = legalMoveColor;
+      ctx.fillStyle = legalMoveColor; // Green color with 50% transparency
       ctx.fill();
     });
   }
 }
 
-// Function to draw highlights for moved squares
-function drawMovedSquareHighlights() {
-  if (movedFromSquare) {
-    // Highlight the square from which the piece was moved
-    const { file, rank } = movedFromSquare;
-    const x = file * squareSize;
-    const y = (7 - rank) * squareSize; // Adjust for flipped ranks
-    ctx.fillStyle = movedFromSquareColor;
-    ctx.fillRect(x, y, squareSize, squareSize);
-  }
 
-  if (movedToSquare) {
-    // Highlight the square to which the piece was moved
-    const { file, rank } = movedToSquare;
-    const x = file * squareSize;
-    const y = (7 - rank) * squareSize; // Adjust for flipped ranks
-    ctx.fillStyle = movedToSquareColor
-    ctx.fillRect(x, y, squareSize, squareSize);
-  }
-}
 
 // Function to draw the entire board
 function draw() {
   ctx.clearRect(0, 0, width, height); // Clear the canvas
 
   drawBoard(); // Draw the chessboard
-  drawMovedSquareHighlights(); // Draw moved square highlights
 
   // Draw the pieces
   for (var i = 0; i < pieces.length; i++) {
