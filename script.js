@@ -46,6 +46,9 @@ let originalPosition = null; // Original position of the selected piece
 // Variable to keep track of the current player
 let currentPlayer = 'white';
 
+// Flag to keep track of touch events
+let isTouch = false;
+
 
 //////////////////////// Event Listeners ////////////////////////
 
@@ -90,6 +93,7 @@ class Piece {
 function handleTouchStart(event) {
   event.preventDefault(); // Prevent default touch behavior
   const touch = event.touches[0]; // Get the first touch
+  isTouch = true;
   handleMouseDown(touch); // Simulate mouse down event with touch coordinates
 }
 
@@ -104,6 +108,7 @@ function handleTouchMove(event) {
 function handleTouchEnd(event) {
   event.preventDefault(); // Prevent default touch behavior
   const touch = event.changedTouches[0]; // Get the first touch that ended
+  isTouch = false;
   handleMouseUp(touch); // Simulate mouse up event with touch coordinates
 }
 
@@ -162,7 +167,6 @@ function handleMouseMove(event) {
 
     // Check if the move is legal based on piece type
     if (isMoveLegal(selectedPiece, file, rank)) {
-      // Redraw the board
       draw();
 
       // Draw the selected piece at its new position
@@ -170,8 +174,21 @@ function handleMouseMove(event) {
       ctx.globalAlpha = 0.5; // Make the piece semi-transparent
       ctx.drawImage(selectedPiece.image, file * squareSize, (7 - rank) * squareSize, squareSize, squareSize); // Adjust for flipped ranks
       ctx.globalAlpha = 1; // Restore global alpha to default
-    } else {
-      // If the move is not legal, redraw the board without updating the selected piece's position
+
+      if (isTouch){
+        // Draw large circle around the selected piece
+        const centerX = (file + 0.5) * squareSize; // Calculate center x-coordinate of the square
+        const centerY = (7 - rank + 0.5) * squareSize; // Calculate center y-coordinate of the square (adjust for flipped ranks)
+        const radius = squareSize * 1.5; // Radius of the circle
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI); // Draw a circle
+        ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)'; // Red color with 50% transparency
+        ctx.lineWidth = 5;
+        ctx.fill();
+      }
+
+    }else{
       draw();
     }
   }
@@ -217,6 +234,7 @@ function handleMouseUp(event) {
 
     // Redraw the board
     draw();
+    checkForCheck(); // Check for check
   }
 }
 
@@ -548,8 +566,6 @@ function draw() {
   }
 
   drawLegalMoves(); // Draw legal moves
-
-  checkForCheck(); // Check for check
 
   console.log('drawn');
 }
