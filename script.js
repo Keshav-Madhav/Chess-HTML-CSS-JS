@@ -232,6 +232,35 @@ function promotion(piece) {
   }
 }
 
+// Function to check if a king is in check
+function checkForCheck() {
+  // Find the kings on the board
+  let whiteKing = pieces.find(piece => piece.name === 'king' && piece.color === 'white');
+  let blackKing = pieces.find(piece => piece.name === 'king' && piece.color === 'black');
+
+  // Check if any piece has a legal move to capture the opponent's king
+  let isWhiteKingInCheck = pieces.some(piece => piece.color === 'black' && isMoveLegal(piece, whiteKing.file, whiteKing.rank));
+  let isBlackKingInCheck = pieces.some(piece => piece.color === 'white' && isMoveLegal(piece, blackKing.file, blackKing.rank));
+
+  // Highlight squares if kings are in check
+  if (isWhiteKingInCheck) {
+    highlightSquare(whiteKing.file, whiteKing.rank, 'rgba(255, 0, 0, 0.5)');
+  }
+  if (isBlackKingInCheck) {
+    highlightSquare(blackKing.file, blackKing.rank, 'rgba(255, 0, 0, 0.5)');
+  }
+}
+
+// Function to highlight a square in red
+function highlightSquare(file, rank, color) {
+  console.log("highlighted",file,rank)
+  const squareX = file * squareSize;
+  const squareY = (8 - rank - 1) * squareSize; // Adjust for flipped ranks
+
+  ctx.fillStyle = color;
+  ctx.fillRect(squareX, squareY, squareSize, squareSize);
+}
+
 
 // Function to move a piece from one position to another
 function movePiece(algebraicCurrent, algebraicNew) {
@@ -519,6 +548,8 @@ function draw() {
   }
 
   drawLegalMoves(); // Draw legal moves
+
+  checkForCheck(); // Check for check
 
   console.log('drawn');
 }
